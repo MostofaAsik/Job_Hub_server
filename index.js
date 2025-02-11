@@ -24,6 +24,7 @@ async function run() {
 
         //server code will appear here
         const jobsCollection = client.db("Job_Hub").collection("jobs");
+        const jobApplicationCollection = client.db("Job_Hub").collection("job_application");
 
 
         //jobs apis
@@ -60,6 +61,40 @@ async function run() {
             res.json(result);
         });
 
+
+
+        //appliction jobs apis
+        //query based get data on email
+        app.get('/application-job', async (req, res) => {
+            const email = req.query.email;  // before semicolon email is sent from frontend
+            const query = { applicant_email: email };
+            const result = await jobApplicationCollection.find(query).toArray();
+
+            for (const applicationsJob of result) {
+                const job = await jobsCollection.findOne({ _id: new ObjectId(applicationsJob.job_id) });
+                if (job) {
+                    applicationsJob.title = job.title;
+                    applicationsJob.company = job.company;
+                    applicationsJob.location = job.location;
+                    applicationsJob.company_logo = job.company_logo;
+                }
+
+            }
+
+            res.json(result);
+        });
+
+        app.post('/application-job', async (req, res) => {
+            const application_job = req.body;
+            const result = await jobApplicationCollection.insertOne(application_job);
+            res.json(result);
+        });
+
+        app.delete('/application-job/:id', async (req, res) => {
+            const id = req.params.id;
+            const result = await jobApplicationCollection.deleteOne({ _id: new ObjectId(id) });
+            res.json(result);
+        });
 
 
 
